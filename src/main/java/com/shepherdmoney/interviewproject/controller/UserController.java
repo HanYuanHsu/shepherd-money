@@ -5,6 +5,7 @@ import com.shepherdmoney.interviewproject.repository.*;
 
 import com.shepherdmoney.interviewproject.vo.request.CreateUserPayload;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,16 +17,23 @@ public class UserController {
     private final UserRepository userRepository;
     @Autowired
     public UserController(UserRepository ur) {
-        userRepository = ur;
+        this.userRepository = ur;
     }
 
+    /**
+     * creates a user entity with information given in the payload, stores the user entity in the database, and
+     * return 200 ok response with the id of the saved user
+     *
+     * @param payload user's information
+     * @return 200 ok response with the id of the saved user
+     */
     @PutMapping("/user") // handles PUT requests
     public ResponseEntity<Integer> createUser(@RequestBody CreateUserPayload payload) {
         // create a user entity with information given in the payload
         User newUser = new User(payload.getName(), payload.getEmail());
 
         // store the user entity in the database
-        User savedUser = userRepository.save(newUser);
+        User savedUser = this.userRepository.save(newUser);
 
         // create a ResponseEntity with http status 'ok'
         // and return it with the id of the saved user
@@ -34,14 +42,20 @@ public class UserController {
 
     @DeleteMapping("/user")
     public ResponseEntity<String> deleteUser(@RequestParam int userId) {
-        // TODO: Return 200 OK if a user with the given ID exists, and the deletion is successful
-        //       Return 400 Bad Request if a user with the ID does not exist
-        //       The response body could be anything you consider appropriate
-        return null;
+        // if userId exists, return 200 OK and delete it from the user repo
+        if (userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+            String responseString = String.format("User with id %d has been successfully deleted.", userId);
+            return ResponseEntity.ok(responseString);
+        }
+
+        // else, return 400 Bad Request
+        String responseString = String.format("User with id %d does not exist.", userId);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseString);
     }
 
-    @GetMapping("/foo")
-    public void myFoo() {
-
+    @DeleteMapping("/all_users")
+    public void deleteAllUsers() {
+        userRepository.deleteAll();
     }
 }

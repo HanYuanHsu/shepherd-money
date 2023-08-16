@@ -1,5 +1,6 @@
 package com.shepherdmoney.interviewproject.model;
 
+import com.shepherdmoney.interviewproject.repository.UserRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -9,6 +10,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -25,7 +28,27 @@ public class CreditCard {
 
     private String number;
 
-    // TODO: Credit card's owner. For detailed hint, please see User class
+    private int user; // the id of the user
+
+    public CreditCard(int user) {
+        this.user = user;
+    }
+
+    public CreditCard(String issuanceBank, String number, int user) {
+        this.issuanceBank = issuanceBank;
+        this.number = number;
+        this.user = user;
+    }
+
+    /**
+     *
+     * @param ur the user repo of this application
+     * @return the name of this credit card's owner
+     */
+    public String getUsername(UserRepository ur) {
+        User u = ur.findById(this.user).orElseThrow();
+        return u.getName();
+    }
 
     // TODO: Credit card's balance history. It is a requirement that the dates in the balanceHistory 
     //       list must be in chronological order, with the most recent date appearing first in the list. 
