@@ -28,16 +28,16 @@ public class CreditCard {
 
     private String number;
 
-    private int user; // the id of the user
+    private int userId; // the id of the user
 
-    public CreditCard(int user) {
-        this.user = user;
+    public CreditCard(int userId) {
+        this.userId = userId;
     }
 
-    public CreditCard(String issuanceBank, String number, int user) {
+    public CreditCard(String issuanceBank, String number, int userId) {
         this.issuanceBank = issuanceBank;
         this.number = number;
-        this.user = user;
+        this.userId = userId;
     }
 
     /**
@@ -46,7 +46,7 @@ public class CreditCard {
      * @return the name of this credit card's owner
      */
     public String getUsername(UserRepository ur) {
-        User u = ur.findById(this.user).orElseThrow();
+        User u = ur.findById(userId).orElseThrow();
         return u.getName();
     }
 
@@ -60,4 +60,6 @@ public class CreditCard {
     //         {date: '2023-04-11', balance: 1000},
     //         {date: '2023-04-10', balance: 800}
     //       ]
+
+    // consider using a TreeMap
 }

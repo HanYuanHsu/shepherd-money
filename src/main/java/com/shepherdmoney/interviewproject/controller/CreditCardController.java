@@ -15,7 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -78,18 +81,58 @@ public class CreditCardController {
  */
     }
 
+    /**
+     *
+     * @param userId
+     * @return A ResponseEntity with an appropriate HTTP status code and response body.
+     *      - 200 ok: if the user exists. The response contains a list of all credit cards associated with the given userId.
+     *      - 404 not found: if no such user with the given userId exists.
+     *      - 500 Internal Server Error: If an unexpected error occurs during the process.
+     *
+     */
     @GetMapping("/credit-card:all")
     public ResponseEntity<List<CreditCardView>> getAllCardOfUser(@RequestParam int userId) {
         // TODO: return a list of all credit cards associated with the given userId, using CreditCardView class
         //       if the user has no credit card, return empty list, never return null
-        return null;
+        try {
+            User user = userRepository.findById(userId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+
+            List<CreditCardView> result = new ArrayList<>();
+            for (int cardId : user.getCreditCards()) {
+                CreditCard card = creditCardRepository.findById(cardId).orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred with credit card retrieval."));
+
+                CreditCardView creditCardView = new CreditCardView(card.getIssuanceBank(), card.getNumber());
+                result.add(creditCardView);
+            }
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "An unexpected error occurred", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
+    /**
+     * Given a credit card number, find whether there is a user associated with the credit card.
+     * @param creditCardNumber
+     * @return A ResponseEntity with an appropriate HTTP status code and response body.
+     *      - 200 ok: if such a user exists. The response will contain the user id
+     *      - 400 Bad Request: if no such user exists
+     */
     @GetMapping("/credit-card:user-id")
     public ResponseEntity<Integer> getUserIdForCreditCard(@RequestParam String creditCardNumber) {
-        // TODO: Given a credit card number, efficiently find whether there is a user associated with the credit card
-        //       If so, return the user id in a 200 OK response. If no such user exists, return 400 Bad Request
-        return null;
+        CreditCard creditCard = creditCardRepository.findByNumber(creditCardNumber).orElse(null);
+
+        if (creditCard != null) {
+            int userId = creditCard.getUserId();
+            return ResponseEntity.ok(userId); // 200 OK with user id
+        } else {
+            return ResponseEntity.badRequest().build(); // 400 Bad Request
+        }
     }
 
     /*
@@ -101,10 +144,14 @@ public class CreditCardController {
         //      [{date: 4/12, balance: 120}, {date: 4/11, balance: 110}, {date: 4/10, balance: 110}]
         //      Return 200 OK if update is done and successful, 400 Bad Request if the given card number
         //        is not associated with a card.
+
+
         
         return null;
     }
 
      */
+
+
     
 }
