@@ -152,6 +152,13 @@ public class CreditCardController {
 
      */
 
-
+    @PostMapping("/credit-card:update-balance")
+    public ResponseEntity<String> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
+        String cardNumber = payload.getCreditCardNumber();
+        CreditCard card = creditCardRepository.findByNumber(cardNumber).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "credit card not found"));
+        
+        return null;
+    }
     
 }

@@ -11,7 +11,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.time.LocalDate;
 import java.util.Optional;
+import java.util.TreeMap;
 
 @Entity
 @Getter
@@ -30,14 +32,22 @@ public class CreditCard {
 
     private int userId; // the id of the user
 
+    private TreeMap<LocalDate, Double> balanceHistory = new TreeMap<>();
+
     public CreditCard(int userId) {
         this.userId = userId;
+
+        // initialize balance history. It must have a date value that matches today's date.
+        balanceHistory.put(LocalDate.now(), 0);
     }
 
     public CreditCard(String issuanceBank, String number, int userId) {
         this.issuanceBank = issuanceBank;
         this.number = number;
         this.userId = userId;
+
+        // initialize balance history. It must have a date value that matches today's date.
+        balanceHistory.put(LocalDate.now(), 0);
     }
 
     /**
@@ -61,5 +71,14 @@ public class CreditCard {
     //         {date: '2023-04-10', balance: 800}
     //       ]
 
-    // consider using a TreeMap
+    /**
+     * Given `date` and `balance`, update this credit card's balance history.
+     * Update means to add `balance` to the current balance at the date specified by `date`
+     * @param date
+     * @param balance
+     */
+    public void updateBalance(LocalDate date, double balance) {
+        double currentBalance = balanceHistory.getOrDefault(date, 0.0);
+        balanceHistory.put(date, currentBalance + balance);
+    }
 }
