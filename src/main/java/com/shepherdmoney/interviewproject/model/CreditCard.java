@@ -1,10 +1,7 @@
 package com.shepherdmoney.interviewproject.model;
 
 import com.shepherdmoney.interviewproject.repository.UserRepository;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +10,7 @@ import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Map;
 import java.util.TreeMap;
 
 @Entity
@@ -32,22 +30,39 @@ public class CreditCard {
 
     private int userId; // the id of the user
 
-    private TreeMap<LocalDate, Double> balanceHistory = new TreeMap<>();
+    @Entity
+    class BalanceHistory {
+        private Map<LocalDate, Double> balanceHistoryMap;
+        public BalanceHistory() {
+            // initialize balance history. It must have a date value that matches today's date.
+            balanceHistoryMap = new TreeMap<>();
+            balanceHistoryMap.put(LocalDate.now(), 0.0);
+        }
+
+        /**
+         * Given `date` and `balance`, update this credit card's balance history.
+         * Update means to add `balance` to the current balance at the date specified by `date`
+         * @param date
+         * @param balance
+         */
+        public void updateBalance(LocalDate date, double balance) {
+            double currentBalance = balanceHistoryMap.getOrDefault(date, 0.0);
+            balanceHistoryMap.put(date, currentBalance + balance);
+        }
+    }
+
+    private BalanceHistory balanceHistory;
 
     public CreditCard(int userId) {
         this.userId = userId;
-
-        // initialize balance history. It must have a date value that matches today's date.
-        balanceHistory.put(LocalDate.now(), 0);
+        this.balanceHistory = new BalanceHistory();
     }
 
     public CreditCard(String issuanceBank, String number, int userId) {
         this.issuanceBank = issuanceBank;
         this.number = number;
         this.userId = userId;
-
-        // initialize balance history. It must have a date value that matches today's date.
-        balanceHistory.put(LocalDate.now(), 0);
+        this.balanceHistory = new BalanceHistory();
     }
 
     /**
@@ -78,7 +93,6 @@ public class CreditCard {
      * @param balance
      */
     public void updateBalance(LocalDate date, double balance) {
-        double currentBalance = balanceHistory.getOrDefault(date, 0.0);
-        balanceHistory.put(date, currentBalance + balance);
+        balanceHistory.updateBalance(date, balance);
     }
 }
