@@ -1,5 +1,6 @@
 package com.shepherdmoney.interviewproject.controller;
 
+import com.shepherdmoney.interviewproject.model.BalanceHistory;
 import com.shepherdmoney.interviewproject.model.CreditCard;
 import com.shepherdmoney.interviewproject.model.User;
 import com.shepherdmoney.interviewproject.repository.UserRepository;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 // logging
+import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -150,6 +153,8 @@ public class CreditCardController {
 
     @PostMapping("/credit-card:update-balance")
     public ResponseEntity<String> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
+
+
         String cardNumber = payload.getCreditCardNumber();
         CreditCard card = creditCardRepository.findByNumber(cardNumber).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "credit card not found"));
@@ -157,5 +162,41 @@ public class CreditCardController {
         return null;
     }
 
-    
+    // False if credit card number not associated with an existing credit card
+    private boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
+        String cardNumber = payload.getCreditCardNumber();
+        CreditCard card = creditCardRepository.findByNumber(cardNumber).orElse(null);
+        if (card == null) {
+            return false;
+        }
+
+        Instant payloadTime = payload.getTransactionTime();
+
+        ListIterator<BalanceHistory> balanceHistoryIter = card.getBalanceHistory().listIterator();
+        while (balanceHistoryIter.hasNext()) {
+            // the iterator will go from the most recent balance history to the oldest one
+
+            BalanceHistory currentBalanceHistory = balanceHistoryIter.next();
+            Instant currentDate = currentBalanceHistory.getDate();
+            int cmp = payloadTime.compareTo(currentDate);
+
+            // cmp > 0 means that payloadTime is more recent
+            // cmp < 0 means that bh.getDate() is more recent
+            if (cmp > 0) {
+                // add the new balance history created from the payload
+                BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payload.getTransactionAmount());
+                balanceHistoryIter.previous();
+                balanceHistoryIter.add(newBalanceHistory);
+                break;
+            } else if (cmp == 0) {
+                currentBalanceHistory.addMoney(payload.getTransactionAmount());
+                break;
+            } else {
+                currentBalanceHistory.addMoney(payload.getTransactionAmount());
+            }
+        }
+
+        return true;
+    }
+
 }

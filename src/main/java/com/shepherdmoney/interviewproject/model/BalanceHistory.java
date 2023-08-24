@@ -34,4 +34,9 @@ public class BalanceHistory {
         this.balance = balance;
         this.date = Instant.now();
     }
+
+    // adds money to current balance
+    public void addMoney(double money) {
+        balance += money;
+    }
 }
