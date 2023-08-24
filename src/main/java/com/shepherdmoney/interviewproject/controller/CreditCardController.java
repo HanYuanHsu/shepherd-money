@@ -152,21 +152,27 @@ public class CreditCardController {
 
 
     @PostMapping("/credit-card:update-balance")
-    public ResponseEntity<String> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
+    public ResponseEntity<Integer> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
+        for (UpdateBalancePayload load : payload) {
+            boolean creditCardExists = updateCardBalanceHelper(load);
+            if (!creditCardExists) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
 
-
-        String cardNumber = payload.getCreditCardNumber();
-        CreditCard card = creditCardRepository.findByNumber(cardNumber).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "credit card not found"));
-
-        return null;
+        return ResponseEntity.ok().build();
     }
 
     // False if credit card number not associated with an existing credit card
     private boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
         String cardNumber = payload.getCreditCardNumber();
+        if (cardNumber == null) {
+            System.out.println("11111 credit card not found");
+        }
+
         CreditCard card = creditCardRepository.findByNumber(cardNumber).orElse(null);
         if (card == null) {
+            System.out.println("credit card not found");
             return false;
         }
 
