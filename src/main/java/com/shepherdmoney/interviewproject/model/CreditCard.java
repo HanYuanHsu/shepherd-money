@@ -21,38 +21,35 @@ public class CreditCard {
 
     private String number;
 
-    private int userId; // the id of the user
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BalanceHistory> balanceHistory;
 
     /* constructors */
 
-    public CreditCard(int userId) {
-        this.userId = userId;
-        this.balanceHistory = new ArrayList<>();
+    public CreditCard(User user) {
+        this.user = user;
+        this.balanceHistory = new LinkedList<>();
         addBalanceHistoryEntry(0); // Initialize with 0 balance
     }
 
-    public CreditCard(String issuanceBank, String number, int userId) {
+    public CreditCard(String issuanceBank, String number, User user) {
         this.issuanceBank = issuanceBank;
         this.number = number;
-        this.userId = userId;
-        this.balanceHistory = new ArrayList<>(); // can I change this to Linkedlist?
+        this.user = user;
+        this.balanceHistory = new LinkedList<>();
         addBalanceHistoryEntry(0); // Initialize with 0 balance
     }
 
     /* end constructors */
 
 
-    /**
-     *
-     * @param ur the user repo of this application
-     * @return the name of this credit card's owner
-     */
-    public String getUsername(UserRepository ur) {
-        User u = ur.findById(userId).orElseThrow();
-        return u.getName();
+
+    public String getUsername() {
+        return user.getName();
     }
 
     // TODO: Credit card's balance history. It is a requirement that the dates in the balanceHistory 
@@ -69,6 +66,6 @@ public class CreditCard {
     // Add a new balance history entry to balanceHistory
     public void addBalanceHistoryEntry(double balance) {
         BalanceHistory historyEntry = new BalanceHistory(balance);
-        balanceHistory.add(0, historyEntry); // Add at the beginning of the list
+        ((LinkedList) balanceHistory).addFirst(historyEntry); // add at the beginning of the list
     }
 }

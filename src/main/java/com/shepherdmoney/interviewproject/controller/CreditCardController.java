@@ -3,6 +3,7 @@ package com.shepherdmoney.interviewproject.controller;
 import com.shepherdmoney.interviewproject.model.CreditCard;
 import com.shepherdmoney.interviewproject.model.User;
 import com.shepherdmoney.interviewproject.repository.UserRepository;
+import com.shepherdmoney.interviewproject.service.CreditCardService;
 import com.shepherdmoney.interviewproject.vo.request.AddCreditCardToUserPayload;
 import com.shepherdmoney.interviewproject.vo.request.UpdateBalancePayload;
 import com.shepherdmoney.interviewproject.vo.response.CreditCardView;
@@ -34,6 +35,9 @@ public class CreditCardController {
     private final CreditCardRepository creditCardRepository;
     private final UserRepository userRepository;
 
+    @Autowired
+    private CreditCardService creditCardService;
+
     private static final Logger logger = Logger.getLogger(CreditCardController.class.getName());
     //Logger logger = LoggerFactory.getLogger(LoggingController.class);
 
@@ -53,8 +57,8 @@ public class CreditCardController {
      */
     @PostMapping("/credit-card")
     public ResponseEntity<Integer> addCreditCardToUser(@RequestBody AddCreditCardToUserPayload payload) {
-
         try {
+            System.out.println("------------------- addCreditCardToUser");
             User user = userRepository.findById(payload.getUserId()).orElse(null);
 
             // if user does not exist, return 404
@@ -62,48 +66,38 @@ public class CreditCardController {
                 return ResponseEntity.notFound().build();
             }
 
-            CreditCard card = new CreditCard(payload.getUserId());
-            user.addCreditCard(card.getId());
+            CreditCard card = new CreditCard(payload.getCardIssuanceBank(), payload.getCardNumber(), user);
+            creditCardService.addCreditCardToUser(card, user);
+
             return ResponseEntity.ok().build();
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "An unexpected error occurred", e);
             return ResponseEntity.internalServerError().build();
         }
-
-
-
-/*
-        for (int cid : user.getCreditCards()) {
-            System.out.println(cid);
-        }
-
- */
     }
 
     /**
+     * Returns a list of all credit cards associated with the given userId, using CreditCardView class.
+     * If the user has no credit card, return empty list, never return null
      *
      * @param userId
      * @return A ResponseEntity with an appropriate HTTP status code and response body.
      *      - 200 ok: if the user exists. The response contains a list of all credit cards associated with the given userId.
      *      - 404 not found: if no such user with the given userId exists.
      *      - 500 Internal Server Error: If an unexpected error occurs during the process.
-     *
      */
     @GetMapping("/credit-card:all")
     public ResponseEntity<List<CreditCardView>> getAllCardOfUser(@RequestParam int userId) {
-        // TODO: return a list of all credit cards associated with the given userId, using CreditCardView class
-        //       if the user has no credit card, return empty list, never return null
         try {
-            User user = userRepository.findById(userId).orElseThrow(() ->
-                    new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            User user = userRepository.findById(userId).orElse(null);
 
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
 
             List<CreditCardView> result = new ArrayList<>();
-            for (int cardId : user.getCreditCards()) {
-                CreditCard card = creditCardRepository.findById(cardId).orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred with credit card retrieval."));
-
+            for (CreditCard card : user.getCreditCards()) {
                 CreditCardView creditCardView = new CreditCardView(card.getIssuanceBank(), card.getNumber());
                 result.add(creditCardView);
             }
@@ -128,8 +122,7 @@ public class CreditCardController {
         CreditCard creditCard = creditCardRepository.findByNumber(creditCardNumber).orElse(null);
 
         if (creditCard != null) {
-            int userId = creditCard.getUserId();
-            return ResponseEntity.ok(userId); // 200 OK with user id
+            return ResponseEntity.ok(creditCard.getUser().getId()); // 200 OK with user id
         } else {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
@@ -152,7 +145,9 @@ public class CreditCardController {
 
      */
 
-    /*
+
+
+
     @PostMapping("/credit-card:update-balance")
     public ResponseEntity<String> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
         String cardNumber = payload.getCreditCardNumber();
@@ -162,6 +157,5 @@ public class CreditCardController {
         return null;
     }
 
-     */
     
 }

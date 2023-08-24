@@ -25,29 +25,25 @@ public class User {
 
     private String email;
 
-    // TODO: User's credit card
-    // HINT: A user can have one or more, or none at all. We want to be able to query credit cards by user
-    //       and user by a credit card.
-    private Set<Integer> creditCards = new HashSet<Integer>();
-
-    /**
-     * adds a credit card to this user
-     * @param cardId
-     */
-    public void addCreditCard(int cardId) {
-        creditCards.add(cardId);
-    }
+    // this user's credit cards.
+    // A user can have one or more, or none at all. We want to be able to query credit cards by user
+    // and user by a credit card.
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<CreditCard> creditCards;
 
 
+    /* constructors */
     public User(String name, String email) {
         this.name = name;
         this.email = email;
+        this.creditCards = new HashSet<>();
     }
+    /* end constructors */
 
-    /*
-    public int getId() {
-        return this.id;
+
+    // add a credit card to this user
+    public void addCreditCard(CreditCard c) {
+        creditCards.add(c);
+        c.setUser(this);
     }
-
-     */
 }
