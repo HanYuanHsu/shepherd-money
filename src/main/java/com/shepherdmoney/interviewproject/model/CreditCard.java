@@ -1,17 +1,10 @@
 package com.shepherdmoney.interviewproject.model;
 
 import com.shepherdmoney.interviewproject.repository.UserRepository;
+import jakarta.persistence.*;
 import lombok.*;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @Entity
 @Getter
@@ -30,40 +23,27 @@ public class CreditCard {
 
     private int userId; // the id of the user
 
-    @Entity
-    class BalanceHistory {
-        private Map<LocalDate, Double> balanceHistoryMap;
-        public BalanceHistory() {
-            // initialize balance history. It must have a date value that matches today's date.
-            balanceHistoryMap = new TreeMap<>();
-            balanceHistoryMap.put(LocalDate.now(), 0.0);
-        }
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BalanceHistory> balanceHistory;
 
-        /**
-         * Given `date` and `balance`, update this credit card's balance history.
-         * Update means to add `balance` to the current balance at the date specified by `date`
-         * @param date
-         * @param balance
-         */
-        public void updateBalance(LocalDate date, double balance) {
-            double currentBalance = balanceHistoryMap.getOrDefault(date, 0.0);
-            balanceHistoryMap.put(date, currentBalance + balance);
-        }
-    }
-
-    private BalanceHistory balanceHistory;
+    /* constructors */
 
     public CreditCard(int userId) {
         this.userId = userId;
-        this.balanceHistory = new BalanceHistory();
+        this.balanceHistory = new ArrayList<>();
+        addBalanceHistoryEntry(0); // Initialize with 0 balance
     }
 
     public CreditCard(String issuanceBank, String number, int userId) {
         this.issuanceBank = issuanceBank;
         this.number = number;
         this.userId = userId;
-        this.balanceHistory = new BalanceHistory();
+        this.balanceHistory = new ArrayList<>(); // can I change this to Linkedlist?
+        addBalanceHistoryEntry(0); // Initialize with 0 balance
     }
+
+    /* end constructors */
+
 
     /**
      *
@@ -86,13 +66,9 @@ public class CreditCard {
     //         {date: '2023-04-10', balance: 800}
     //       ]
 
-    /**
-     * Given `date` and `balance`, update this credit card's balance history.
-     * Update means to add `balance` to the current balance at the date specified by `date`
-     * @param date
-     * @param balance
-     */
-    public void updateBalance(LocalDate date, double balance) {
-        balanceHistory.updateBalance(date, balance);
+    // Add a new balance history entry to balanceHistory
+    public void addBalanceHistoryEntry(double balance) {
+        BalanceHistory historyEntry = new BalanceHistory(balance);
+        balanceHistory.add(0, historyEntry); // Add at the beginning of the list
     }
 }

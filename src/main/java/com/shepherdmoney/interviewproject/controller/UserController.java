@@ -40,6 +40,14 @@ public class UserController {
         return ResponseEntity.ok(savedUser.getId());
     }
 
+
+    /**
+     * Deletes the user specified by userId
+     * @param userId
+     * @return A ResponseEntity with an appropriate HTTP status code and response body.
+     *          200 ok: if the user exists and is successfully deleted
+     *          400 Bad Request: if the user does not exist
+     */
     @DeleteMapping("/user")
     public ResponseEntity<String> deleteUser(@RequestParam int userId) {
         // if userId exists, return 200 OK and delete it from the user repo
