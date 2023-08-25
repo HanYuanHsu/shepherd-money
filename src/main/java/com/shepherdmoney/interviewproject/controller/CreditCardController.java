@@ -5,6 +5,7 @@ import com.shepherdmoney.interviewproject.model.CreditCard;
 import com.shepherdmoney.interviewproject.model.User;
 import com.shepherdmoney.interviewproject.repository.UserRepository;
 import com.shepherdmoney.interviewproject.service.CreditCardService;
+import com.shepherdmoney.interviewproject.service.BalanceHistoryService;
 import com.shepherdmoney.interviewproject.vo.request.AddCreditCardToUserPayload;
 import com.shepherdmoney.interviewproject.vo.request.UpdateBalancePayload;
 import com.shepherdmoney.interviewproject.vo.response.CreditCardView;
@@ -40,6 +41,9 @@ public class CreditCardController {
 
     @Autowired
     private CreditCardService creditCardService;
+
+    @Autowired
+    private BalanceHistoryService balanceHistoryService;
 
     private static final Logger logger = Logger.getLogger(CreditCardController.class.getName());
     //Logger logger = LoggerFactory.getLogger(LoggingController.class);
@@ -154,8 +158,7 @@ public class CreditCardController {
     @PostMapping("/credit-card:update-balance")
     public ResponseEntity<Integer> updateCardBalance(@RequestBody UpdateBalancePayload[] payload) {
         for (UpdateBalancePayload load : payload) {
-            boolean creditCardExists = updateCardBalanceHelper(load);
-            if (!creditCardExists) {
+            if (!balanceHistoryService.updateCardBalanceHelper(load)) {
                 return ResponseEntity.badRequest().build();
             }
         }
@@ -163,46 +166,31 @@ public class CreditCardController {
         return ResponseEntity.ok().build();
     }
 
+    /*
     // False if credit card number not associated with an existing credit card
     private boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
         String cardNumber = payload.getCreditCardNumber();
-        if (cardNumber == null) {
-            System.out.println("11111 credit card not found");
-        }
 
         CreditCard card = creditCardRepository.findByNumber(cardNumber).orElse(null);
         if (card == null) {
-            System.out.println("credit card not found");
+            //System.out.println("credit card not found");
             return false;
         }
 
+
+
         Instant payloadTime = payload.getTransactionTime();
 
-        ListIterator<BalanceHistory> balanceHistoryIter = card.getBalanceHistory().listIterator();
-        while (balanceHistoryIter.hasNext()) {
-            // the iterator will go from the most recent balance history to the oldest one
 
-            BalanceHistory currentBalanceHistory = balanceHistoryIter.next();
-            Instant currentDate = currentBalanceHistory.getDate();
-            int cmp = payloadTime.compareTo(currentDate);
 
-            // cmp > 0 means that payloadTime is more recent
-            // cmp < 0 means that bh.getDate() is more recent
-            if (cmp > 0) {
-                // add the new balance history created from the payload
-                BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payload.getTransactionAmount());
-                balanceHistoryIter.previous();
-                balanceHistoryIter.add(newBalanceHistory);
-                break;
-            } else if (cmp == 0) {
-                currentBalanceHistory.addMoney(payload.getTransactionAmount());
-                break;
-            } else {
-                currentBalanceHistory.addMoney(payload.getTransactionAmount());
-            }
-        }
 
         return true;
+
+
     }
+
+     */
+
+
 
 }
