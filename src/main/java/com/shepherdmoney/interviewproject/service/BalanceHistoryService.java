@@ -11,6 +11,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -22,29 +23,35 @@ public class BalanceHistoryService {
     public boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
         String creditCardNumber = payload.getCreditCardNumber();
 
-        //EntityManagerFactory emf = Persistence.createEntityManagerFactory("");
-        //EntityManager em = emf.createEntityManager();
-        //em.getTransaction().begin();
-
         CreditCard card = creditCardRepository.findByNumber(creditCardNumber).orElse(null);
         if (card == null) {
             return false;
         }
 
-        List<BalanceHistory> balanceHistory = card.getBalanceHistory();
-//
-//        for (BalanceHistory balanceHistoryEntry : balanceHistory) {
-//
-//        }
+        Instant payloadTime = payload.getTransactionTime();
+        double payloadAmount = payload.getTransactionAmount();
+        List<BalanceHistory> balanceHistoryList = card.getBalanceHistory();
 
-        BalanceHistory balanceHistoryEntry = balanceHistory.get(0);//TEMPORAY UPDATE?
-        balanceHistoryEntry.setDate(payload.getTransactionTime());
-        balanceHistoryEntry.setBalance(payload.getTransactionAmount());
+        for (BalanceHistory currentBalanceHistory : balanceHistoryList) {
+            Instant currentDate = currentBalanceHistory.getDate();
+            int cmp = payloadTime.compareTo(currentDate);
+            // cmp > 0 means that payload is more recent
+            // cmp < 0 means that the current balance history is more recent
+            if (cmp > 0) {
+                // add the new balance history created from the payload
+                BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payloadAmount);
+                balanceHistoryList.add(newBalanceHistory);
+                break;
+            } else if (cmp < 0) {
+                currentBalanceHistory.addMoney(payloadAmount);
+            } else {
+                currentBalanceHistory.addMoney(payloadAmount);
+                break;
+            }
+        }
 
+        // persistence
         creditCardRepository.save(card);
-
-        //em.persist(card);
-        //em.getTransaction().commit();
 
         return true;
     }
