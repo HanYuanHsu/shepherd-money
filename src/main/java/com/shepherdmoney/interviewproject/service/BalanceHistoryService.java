@@ -31,7 +31,7 @@ public class BalanceHistoryService {
         Instant payloadTime = payload.getTransactionTime();
         double payloadAmount = payload.getTransactionAmount();
         List<BalanceHistory> balanceHistoryList = card.getBalanceHistory();
-        boolean newBalanceHistoryIsEarliest = true;
+        //boolean newBalanceHistoryIsEarliest = true;
         for (BalanceHistory currentBalanceHistory : balanceHistoryList) {
             Instant currentDate = currentBalanceHistory.getDate();
             int cmp = payloadTime.compareTo(currentDate);
@@ -43,33 +43,28 @@ public class BalanceHistoryService {
                         payloadAmount + currentBalanceHistory.getBalance());
                 balanceHistoryList.add(newBalanceHistory);
 
-                // this means that the new balance history given by payload is not the earliest
-                newBalanceHistoryIsEarliest = false;
-
-                break;
+                // persistence
+                creditCardRepository.save(card);
+                return true;
 
             } else if (cmp < 0) {
                 currentBalanceHistory.addMoney(payloadAmount);
             } else {
                 currentBalanceHistory.addMoney(payloadAmount);
 
-                // this means that the new balance history given by payload is not the earliest
-                newBalanceHistoryIsEarliest = false;
-
-                break;
+                // persistence
+                creditCardRepository.save(card);
+                return true;
             }
         }
 
-        // edge case: when the new balance history given by payload is the earliest,
+        // this is the edge case when the new balance history given by payload is the earliest.
         // we still need to add this new balance history into our balanceHistoryList.
-        if (newBalanceHistoryIsEarliest) {
-            BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payloadAmount);
-            balanceHistoryList.add(newBalanceHistory);
-        }
+        BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payloadAmount);
+        balanceHistoryList.add(newBalanceHistory);
 
         // persistence
         creditCardRepository.save(card);
-
         return true;
     }
 }
