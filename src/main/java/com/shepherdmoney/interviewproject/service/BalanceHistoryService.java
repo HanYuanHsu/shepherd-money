@@ -32,22 +32,21 @@ public class BalanceHistoryService {
         double payloadAmount = payload.getTransactionAmount();
         List<BalanceHistory> balanceHistoryList = card.getBalanceHistory();
 
+        boolean shouldAddNewBalanceHistory = true;
         for (BalanceHistory currentBalanceHistory : balanceHistoryList) {
             Instant currentDate = currentBalanceHistory.getDate();
             int cmp = payloadTime.compareTo(currentDate);
             // cmp > 0 means that payload is more recent
             // cmp < 0 means that the current balance history is more recent
-            if (cmp > 0) {
-                // add the new balance history created from the payload
-                BalanceHistory newBalanceHistory = new BalanceHistory(payloadTime, payloadAmount);
-                balanceHistoryList.add(newBalanceHistory);
-                break;
-            } else if (cmp < 0) {
+            if (cmp <= 0) {
                 currentBalanceHistory.addMoney(payloadAmount);
-            } else {
-                currentBalanceHistory.addMoney(payloadAmount);
-                break;
             }
+
+            if (cmp == 0) shouldAddNewBalanceHistory = false;
+        }
+
+        if (shouldAddNewBalanceHistory) {
+            balanceHistoryList.add(new BalanceHistory(payloadTime, payloadAmount));
         }
 
         // persistence
