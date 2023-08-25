@@ -5,6 +5,8 @@ import com.shepherdmoney.interviewproject.model.CreditCard;
 import com.shepherdmoney.interviewproject.repository.CreditCardRepository;
 import com.shepherdmoney.interviewproject.vo.request.UpdateBalancePayload;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,16 +16,15 @@ import java.util.List;
 @Service
 public class BalanceHistoryService {
 
-    @PersistenceContext
-    private EntityManager em;
-
     @Autowired
     private CreditCardRepository creditCardRepository;
 
     public boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
         String creditCardNumber = payload.getCreditCardNumber();
 
-        em.getTransaction().begin();
+        //EntityManagerFactory emf = Persistence.createEntityManagerFactory("");
+        //EntityManager em = emf.createEntityManager();
+        //em.getTransaction().begin();
 
         CreditCard card = creditCardRepository.findByNumber(creditCardNumber).orElse(null);
         if (card == null) {
@@ -31,11 +32,19 @@ public class BalanceHistoryService {
         }
 
         List<BalanceHistory> balanceHistory = card.getBalanceHistory();
-        BalanceHistory balanceHistoryEntry = balanceHistory.get(0);
-        balanceHistoryEntry.setBalance(69);
+//
+//        for (BalanceHistory balanceHistoryEntry : balanceHistory) {
+//
+//        }
 
-        em.persist(card);
-        em.getTransaction().commit();
+        BalanceHistory balanceHistoryEntry = balanceHistory.get(0);//TEMPORAY UPDATE?
+        balanceHistoryEntry.setDate(payload.getTransactionTime());
+        balanceHistoryEntry.setBalance(payload.getTransactionAmount());
+
+        creditCardRepository.save(card);
+
+        //em.persist(card);
+        //em.getTransaction().commit();
 
         return true;
     }
