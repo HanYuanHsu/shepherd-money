@@ -20,6 +20,12 @@ public class BalanceHistoryService {
     @Autowired
     private CreditCardRepository creditCardRepository;
 
+    /**
+     * Finds the credit card specified by payload and updates its balance
+     * @param payload
+     * @return true if the credit card specified by payload's credit card number exists,
+     *          false otherwise
+     */
     public boolean updateCardBalanceHelper(UpdateBalancePayload payload) {
         String creditCardNumber = payload.getCreditCardNumber();
 

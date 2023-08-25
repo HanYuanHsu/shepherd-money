@@ -61,9 +61,4 @@ public class UserController {
         String responseString = String.format("User with id %d does not exist.", userId);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseString);
     }
-
-    @DeleteMapping("/all_users")
-    public void deleteAllUsers() {
-        userRepository.deleteAll();
-    }
 }
